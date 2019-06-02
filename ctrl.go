@@ -18,16 +18,22 @@ type leaderCtrl struct {
 	ctx               context.Context
 	ctxCancel         context.CancelFunc
 	etcdCli           *clientv3.Client
+	token             string
 }
 
 // NewController returns a new Controller from etcd client.
 //
 // It runs worker goroutine that should be stopped using Controller.Stop
 // method.
-func NewController(cli *clientv3.Client) Controller {
+//
+// token is a unique identifier of election participants group. Only one
+// of participants would be elected in a group, identified by token
+// on current etcd cluster.
+func NewController(cli *clientv3.Client, token string) Controller {
 	lc := &leaderCtrl{
 		wg:      &sync.WaitGroup{},
 		etcdCli: cli,
+		token:   token,
 	}
 	lc.ctx, lc.ctxCancel = context.WithCancel(context.Background())
 	lc.wg.Add(1)
@@ -80,6 +86,7 @@ func workerSession(ctx context.Context, cli *clientv3.Client, ctrl *leaderCtrl) 
 	// etcd cluster is broken
 	sctx, scancel := context.WithCancel(cli.Ctx())
 	newSessionDoneCh := make(chan struct{})
+
 	// goroutine to monitor session closing
 	go func() {
 		select {
@@ -113,7 +120,7 @@ func workerSession(ctx context.Context, cli *clientv3.Client, ctrl *leaderCtrl) 
 		}
 	}()
 
-	election := concurrency.NewElection(sess, "/my-election")
+	election := concurrency.NewElection(sess, ctrl.token)
 	err = election.Campaign(ctx, "")
 	if err != nil {
 		return err
