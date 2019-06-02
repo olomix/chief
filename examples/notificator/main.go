@@ -88,7 +88,7 @@ func main() {
 		log.Print("etcd client closed")
 	}()
 
-	ctrl := chief.NewController(cli)
+	ctrl := chief.NewController(cli, "election-1")
 	defer func() {
 		ctrl.Close()
 		log.Print("leader controller closed")
