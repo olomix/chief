@@ -20,7 +20,11 @@ type leaderCtrl struct {
 	etcdCli           *clientv3.Client
 }
 
-func NewLeaderController(cli *clientv3.Client) Controller {
+// NewController returns a new Controller from etcd client.
+//
+// It runs worker goroutine that should be stopped using Controller.Stop
+// method.
+func NewController(cli *clientv3.Client) Controller {
 	lc := &leaderCtrl{
 		wg:      &sync.WaitGroup{},
 		etcdCli: cli,
