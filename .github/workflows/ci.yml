@@ -5,6 +5,8 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     container: golang:1.16.5
+    env:
+      ETCD_ADDR: etcd:2379
     steps:
       - uses: actions/checkout@v2
       - run: go test -v -race ./...
