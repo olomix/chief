@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/olomix/chief"
+	"github.com/olomix/chief/v2"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type leaderNotifier struct {
