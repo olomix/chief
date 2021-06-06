@@ -8,3 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: go test -v -race ./...
+    services:
+      etcd:
+        image: bitnami/etcd:v3.4.16
+        env:
+          ALLOW_NONE_AUTHENTICATION: yes
+          ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
