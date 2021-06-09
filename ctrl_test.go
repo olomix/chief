@@ -1,12 +1,12 @@
 package chief
 
 import (
-	"context"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -29,24 +29,6 @@ func (t *testWorker) Stop() {
 	t.lostLeadership++
 }
 
-func waitForLeader(t *testing.T, cli *clientv3.Client) {
-	start := time.Now()
-	for {
-		members, err := cli.MemberList(context.Background())
-		require.NoError(t, err)
-		leaderFound := false
-		for _, m := range members.Members {
-			t.Logf("%v %v %v", m.ID, m.Name, m.IsLearner)
-			leaderFound = leaderFound || m.IsLearner
-		}
-		if leaderFound {
-			return
-		}
-		time.Sleep(200 * time.Millisecond)
-		require.True(t, time.Now().Before(start.Add(30*time.Second)))
-	}
-}
-
 func TestNewController(t *testing.T) {
 	etcdAddr, ok := os.LookupEnv("ETCD_ADDR")
 	require.True(t, ok)
@@ -58,7 +40,26 @@ func TestNewController(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-	waitForLeader(t, cli)
 	ctrl := NewController(cli, "test")
+	worker := &testWorker{}
+	ctrl.Register(worker)
+
+	start := time.Now()
+	for {
+		worker.m.Lock()
+		x := worker.gotLeadership
+		worker.m.Unlock()
+		if x > 0 {
+			break
+		}
+		require.True(t, time.Now().Before(start.Add(30*time.Second)))
+		time.Sleep(200 * time.Millisecond)
+	}
+
 	ctrl.Close()
+
+	worker.m.Lock()
+	x := worker.gotLeadership
+	worker.m.Unlock()
+	assert.Equal(t, 1, x)
 }

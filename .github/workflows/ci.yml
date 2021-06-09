@@ -14,5 +14,5 @@ jobs:
       etcd:
         image: bitnami/etcd:3.4.16
         env:
-          ALLOW_NONE_AUTHENTICATION: yes
-          ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
+          ALLOW_NONE_AUTHENTICATION: "yes"
+          ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
