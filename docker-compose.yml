@@ -1,0 +1,28 @@
+version: "3"
+services:
+  gotest:
+    image: golang:1.16.5
+    working_dir: /src
+    volumes:
+      - type: bind
+        source: ./
+        target: /src
+      - type: bind
+        source: /Users/alek/go/pkg/mod
+        target: /go/pkg/mod
+    environment:
+      ETCD_ADDR: "etcd:2379"
+    depends_on:
+      - etcd
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -x
+        go test -v -race -timeout 10m -count 1 -p 1 ./...
+        # go test -v -race -timeout 10m -count 1 -p 1 -run "^TestStartStopModificationsSender$$" ./data_repository
+  etcd:
+    image: bitnami/etcd:3.4.16
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
