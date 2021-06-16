@@ -114,10 +114,8 @@ func workerSession(ctx context.Context, cli *clientv3.Client, ctrl *leaderCtrl) 
 
 	// Notify session done
 	go func() {
-		select {
-		case <-sess.Done():
-			log.Print("session done watcher")
-		}
+		<-sess.Done()
+		log.Print("session done watcher")
 	}()
 
 	election := concurrency.NewElection(sess, ctrl.token)
